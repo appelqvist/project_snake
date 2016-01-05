@@ -27,10 +27,12 @@ public class Project_Snake {
         int currentRow = 0;
         int currentCol = 0;
         brickArray[currentRow][currentCol].setVisited();
-        currentRow = 1;
 
-        while(!(currentRow == 0 && currentCol == 0)){
+        System.out.println("Börjar på: 0,1 och ska till 0,0");
+        currentRow = currentRow+1;
 
+        boolean running = true;
+        while(running){
             //Kolla om de går att gå vänster
             if((currentCol-1 >= 0) && brickArray[currentRow][currentCol-1].isAllowed()){
                 brickArray[currentRow][currentCol].setVisited();
@@ -51,17 +53,18 @@ public class Project_Snake {
                 brickArray[currentRow][currentCol].setVisited();
                 currentRow = currentRow+1;
             }
+
             //Stuck
             else{
-                System.out.println("Stuck");
-                break;
+                System.out.println("*****Stuck**********");
+                running = false;
             }
 
             if(currentCol-1 == 0 && currentRow == 0){
                 brickArray[currentRow][currentCol].setVisited();
-                System.out.println("Klarade det");
-                break;
+                running = false;
             }
+            System.out.println(currentCol+", "+currentRow);
         }
     }
 
