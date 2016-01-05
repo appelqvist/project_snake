@@ -7,17 +7,22 @@ import java.util.ArrayList;
  * Created by Andreas Appelqvist on 2016-01-03.
  */
 
-public class Controller {
+public class Project_Snake {
 
     private Brick[][] brickArray;
     private int nbrRows;
     private int nbrColums;
 
-    public Controller(String map){
+    public Project_Snake(String map){
         initMap(map);
         startSnake();
+        printMap();
     }
 
+
+    /**
+     * Startar ormen så den får gå genom kartan
+     */
     public void startSnake(){
         int currentRow = 0;
         int currentCol = 0;
@@ -26,24 +31,39 @@ public class Controller {
 
         while(!(currentRow == 0 && currentCol == 0)){
 
-            if((currentCol+1 <= nbrColums) && brickArray[currentRow][currentCol+1].isAllowed()){ //Om du får gå till höger
-
-            }else if((currentRow+1 <= nbrRows) && brickArray[currentRow][currentCol].isAllowed()){ //Om du får gå neråt
-
-            }else if((currentRow-1 >= 0) && brickArray[currentRow][currentCol].isAllowed()){ //Om du får gå uppåt
-
-            }else if((currentCol-1 >= 0) && brickArray[currentRow][currentCol].isAllowed()){ //Om du får gå åt vänster
-
-            }else{
-                System.out.println("Finns ingenstans att gå");
-                printMap();
+            //Kolla om de går att gå vänster
+            if((currentCol-1 >= 0) && brickArray[currentRow][currentCol-1].isAllowed()){
+                brickArray[currentRow][currentCol].setVisited();
+                currentCol = currentCol-1;
+            }
+            //Kollar om de går att gå uppåt
+            else if((currentRow-1 >= 0) && brickArray[currentRow-1][currentCol].isAllowed()){
+                brickArray[currentRow][currentCol].setVisited();
+                currentRow = currentRow-1;
+            }
+            //Kollar om det går att gå höger
+            else if((currentCol+1 <= nbrColums) && brickArray[currentRow][currentCol+1].isAllowed()){
+                brickArray[currentRow][currentCol].setVisited();
+                currentCol = currentCol+1;
+            }
+            //Kollar om det går att gå neråt
+            else if((currentRow+1 <= nbrRows) && brickArray[currentRow+1][currentCol].isAllowed()){
+                brickArray[currentRow][currentCol].setVisited();
+                currentRow = currentRow+1;
+            }
+            //Stuck
+            else{
+                System.out.println("Stuck");
+                break;
             }
 
+            if(currentCol-1 == 0 && currentRow == 0){
+                brickArray[currentRow][currentCol].setVisited();
+                System.out.println("Klarade det");
+                break;
+            }
         }
-
     }
-
-
 
     /**
      * Läser in från textfilen och skapar ett rutnät med hinder.
@@ -73,10 +93,10 @@ public class Controller {
             e.printStackTrace();
         }
 
-        nbrRows = Integer.parseInt(splitted.get(0));
-        nbrColums = Integer.parseInt(splitted.get(1));
+        nbrColums = Integer.parseInt(splitted.get(0));
+        nbrRows = Integer.parseInt(splitted.get(1));
 
-        brickArray = new Brick[nbrColums][nbrRows];
+        brickArray = new Brick[nbrRows][nbrColums];
 
         //Bygger upp rutnätet
         for (int i = 0; i < brickArray.length; i++) {
@@ -87,14 +107,21 @@ public class Controller {
 
         //Lägger till forbiddenfields
         for(int i = 3; i < splitted.size(); i = i+2){
-            System.out.println("row: "+splitted.get(i)+", col: "+splitted.get(i+1));
-            brickArray[Integer.parseInt(splitted.get(i))][Integer.parseInt(splitted.get(i+1))].setForbiddenField();
+            System.out.println("row: "+splitted.get(i+1)+", col: "+splitted.get(i));
+            brickArray[Integer.parseInt(splitted.get(i+1))][Integer.parseInt(splitted.get(i))].setForbiddenField();
         }
         //printMap();
     }
 
+    /**
+     * Skriver ut hur kartan ser ut
+     * O = En obesökt brick
+     * X = Forbiddenfield
+     * S = Besökta bricks av ormen
+     */
     public void printMap(){
-        System.out.println("\n*****************KARTA***************");
+        System.out.println("\n*****************KARTA***************\n\n");
+
         for (int i = 0; i < brickArray.length; i++) {
             for (int j = 0; j < brickArray[i].length; j++) {
 
