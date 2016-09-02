@@ -12,6 +12,8 @@ public class Project_Snake {
     private Brick[][] brickArray;
     private int nbrRows;
     private int nbrColums;
+    private int currentRow = 0;
+    private int currentCol = 0;
 
     public Project_Snake(String map){
         initMap(map);
@@ -23,50 +25,23 @@ public class Project_Snake {
     /**
      * Startar ormen så den får gå genom kartan
      */
-    public void startSnake(){
-        int currentRow = 0;
-        int currentCol = 0;
-        brickArray[currentRow][currentCol].setVisited();
+    public void startSnake() {
 
-        System.out.println("Börjar på: 0,1 och ska till 0,0");
-        currentRow = currentRow+1;
+
+        //Check if its Ok to start at row 1
+        if (brickArray[1][0].isAllowed()) {
+            currentCol = 0;
+            currentRow = 1;
+        }
 
         boolean running = true;
-        while(running){
-            //Kolla om de går att gå vänster
-            if((currentCol-1 >= 0) && brickArray[currentRow][currentCol-1].isAllowed()){
-                brickArray[currentRow][currentCol].setVisited();
-                currentCol = currentCol-1;
-            }
-            //Kollar om de går att gå uppåt
-            else if((currentRow-1 >= 0) && brickArray[currentRow-1][currentCol].isAllowed()){
-                brickArray[currentRow][currentCol].setVisited();
-                currentRow = currentRow-1;
-            }
-            //Kollar om det går att gå höger
-            else if((currentCol+1 <= nbrColums) && brickArray[currentRow][currentCol+1].isAllowed()){
-                brickArray[currentRow][currentCol].setVisited();
-                currentCol = currentCol+1;
-            }
-            //Kollar om det går att gå neråt
-            else if((currentRow+1 <= nbrRows) && brickArray[currentRow+1][currentCol].isAllowed()){
-                brickArray[currentRow][currentCol].setVisited();
-                currentRow = currentRow+1;
-            }
+        while (running) {
 
-            //Stuck
-            else{
-                System.out.println("*****Stuck**********");
-                running = false;
-            }
 
-            if(currentCol-1 == 0 && currentRow == 0){
-                brickArray[currentRow][currentCol].setVisited();
-                running = false;
-            }
-            System.out.println(currentCol+", "+currentRow);
         }
     }
+
+    
 
     /**
      * Läser in från textfilen och skapar ett rutnät med hinder.
@@ -118,28 +93,28 @@ public class Project_Snake {
 
     /**
      * Skriver ut hur kartan ser ut
-     * O = En obesökt brick
-     * X = Forbiddenfield
-     * S = Besökta bricks av ormen
+     * [ ] = En obesökt brick
+     * [X] = Forbiddenfield
+     * [S] = Besökta bricks av ormen
      */
     public void printMap(){
-        System.out.println("\n*****************KARTA***************\n\n");
+        System.out.println("\n*****************KARTA***************\n");
 
         for (int i = 0; i < brickArray.length; i++) {
             for (int j = 0; j < brickArray[i].length; j++) {
 
                 if(brickArray[i][j].isForbidden()){
-                    System.out.print("X   ");
+                    System.out.print("[X]");
                 }else if(brickArray[i][j].isVisited()){
-                    System.out.print("S   ");
+                    System.out.print("[S]");
                 }else{
-                    System.out.print("O   ");
+                    System.out.print("[ ]");
                 }
                 if(j == brickArray[i].length-1)
-                    System.out.println("\n\n");
+                    System.out.println();
             }
         }
-        System.out.println("*****************KARTA***************\n");
+        System.out.println("\n*****************KARTA***************\n");
     }
 
 }
