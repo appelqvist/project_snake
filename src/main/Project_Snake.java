@@ -1,120 +1,118 @@
 package main;
 
 import java.io.*;
-import java.util.ArrayList;
 
 /**
  * Created by Andreas Appelqvist on 2016-01-03.
  */
-
 public class Project_Snake {
-
-    private Brick[][] brickArray;
-    private int nbrRows;
-    private int nbrColums;
-    private int currentRow = 0;
-    private int currentCol = 0;
-
-    public Project_Snake(String map){
+    private int[][] mgameboard;
+    public Project_Snake(String map) {
         initMap(map);
-        startSnake();
         printMap();
+        //Building a graph to find the optimal solution
+        Node[] nodes = buildGraph();
+        String[] result = (new LongestPath(nodes[0], nodes[1])).findLongestPath();
+        System.out.println("Map Coverage: "+result[0]);
+        System.out.println(result[1]);
     }
 
-
     /**
-     * Startar ormen så den får gå genom kartan
+     * Initilize the map.
+     * @param map
      */
-    public void startSnake() {
+    public void initMap(String map) {
+        try {
+            BufferedReader br = new BufferedReader(new FileReader("src/map.txt"));
+            int row, col;
+            String[] line;
 
+            String input = br.readLine();
+            line = input.split(",");
+            row = Integer.parseInt(line[0]);
+            col = Integer.parseInt(line[1]);
+            int nbrOfObst = Integer.parseInt(line[2]);
+            mgameboard = new int[row][col];
 
-        //Check if its Ok to start at row 1
-        if (brickArray[1][0].isAllowed()) {
-            currentCol = 0;
-            currentRow = 1;
-        }
-
-        boolean running = true;
-        while (running) {
-
-
-        }
-    }
-
-    
-
-    /**
-     * Läser in från textfilen och skapar ett rutnät med hinder.
-     * @param map path (String) til kartan
-     */
-    public void initMap(String map){
-        ArrayList<String> splitted = new ArrayList<String>();
-
-        try (BufferedReader br = new BufferedReader(new FileReader(map))){
-            String line;
-            String[] cutLine;
-            while ((line = br.readLine()) != null)
-            {
-                cutLine = line.split(",");
-                if(cutLine.length > 2){
-                    for(int i = 0; i < 3; i++)
-                        splitted.add(cutLine[i]);
-                }
-                else{
-                    splitted.add(cutLine[0]);
-                    splitted.add(cutLine[1]);
+            for (int i = 0; i < mgameboard.length; i++) {
+                for (int j = 0; j < mgameboard[i].length; j++) {
+                    mgameboard[i][j] = 0;
                 }
             }
-        }catch (FileNotFoundException e){
+
+            for (int i = 0; i < nbrOfObst; i++) {
+                input = br.readLine();
+                line = input.split(",");
+                mgameboard[Integer.parseInt(line[0])][Integer.parseInt(line[1])] = 1;
+            }
+
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
-        }catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
-
-        nbrColums = Integer.parseInt(splitted.get(0));
-        nbrRows = Integer.parseInt(splitted.get(1));
-
-        brickArray = new Brick[nbrRows][nbrColums];
-
-        //Bygger upp rutnätet
-        for (int i = 0; i < brickArray.length; i++) {
-            for (int j = 0; j < brickArray[i].length; j++) {
-                brickArray[i][j] = new Brick();
-            }
-        }
-
-        //Lägger till forbiddenfields
-        for(int i = 3; i < splitted.size(); i = i+2){
-            System.out.println("row: "+splitted.get(i+1)+", col: "+splitted.get(i));
-            brickArray[Integer.parseInt(splitted.get(i+1))][Integer.parseInt(splitted.get(i))].setForbiddenField();
-        }
-        //printMap();
     }
 
     /**
-     * Skriver ut hur kartan ser ut
-     * [ ] = En obesökt brick
-     * [X] = Forbiddenfield
-     * [S] = Besökta bricks av ormen
+     * building a graph of the current gameboard
+     * @return a array of Nodes[2]: Node[0] = startNode, Node[1] = finishNode
      */
-    public void printMap(){
-        System.out.println("\n*****************KARTA***************\n");
+    private Node[] buildGraph() {
+        Node[] startAndFinish = new Node[2];
 
-        for (int i = 0; i < brickArray.length; i++) {
-            for (int j = 0; j < brickArray[i].length; j++) {
-
-                if(brickArray[i][j].isForbidden()){
-                    System.out.print("[X]");
-                }else if(brickArray[i][j].isVisited()){
-                    System.out.print("[S]");
-                }else{
-                    System.out.print("[ ]");
+        Node[][] nodes = new Node[mgameboard.length][mgameboard[0].length];
+        for (int i = 0; i < nodes.length; i++) {
+            for (int j = 0; j < nodes[i].length; j++) {
+                if (mgameboard[i][j] != 1) { //Don't need the obstacles
+                    nodes[i][j] = new Node(j + i * mgameboard[i].length, ""+i+", "+j);
+                    if (i == 0 && j == 0) { //finish node
+                        startAndFinish[1] = nodes[i][j];
+                    } else if (i == 1 && j == 0) { //starting node
+                        startAndFinish[0] = nodes[i][j];
+                    }
                 }
-                if(j == brickArray[i].length-1)
-                    System.out.println();
             }
         }
-        System.out.println("\n*****************KARTA***************\n");
+
+        for (int i = 0; i < mgameboard.length; i++) {
+            for (int j = 0; j < mgameboard[i].length; j++) {
+                if (mgameboard[i][j] == 0) {
+                    //Look up
+                    if (i - 1 >= 0 && mgameboard[i - 1][j] == 0) {
+                        nodes[i][j].addNeighbor(nodes[i - 1][j]);
+                    }
+                    //Look down
+                    if (i + 1 < mgameboard.length && mgameboard[i + 1][j] == 0) {
+                        nodes[i][j].addNeighbor(nodes[i + 1][j]);
+                    }
+                    //Look right
+                    if (j - 1 >= 0 && mgameboard[i][j - 1] == 0) {
+                        nodes[i][j].addNeighbor(nodes[i][j - 1]);
+                    }
+                    //Look left
+                    if (j + 1 < mgameboard[i].length && mgameboard[i][j + 1] == 0) {
+                        nodes[i][j].addNeighbor(nodes[i][j + 1]);
+                    }
+                }
+            }
+        }
+
+        startAndFinish[0].removeNeighbor(startAndFinish[1]);
+        startAndFinish[1].removeNeighbor(startAndFinish[0]);
+        return startAndFinish;
+    }
+
+    /**
+     * Print out visual were the obstacles is located on the map.
+     */
+    private void printMap() {
+        for (int i = 0; i < mgameboard.length; i++) {
+            for (int j = 0; j < mgameboard[i].length; j++) {
+                System.out.print(mgameboard[i][j]);
+            }
+            System.out.println();
+        }
+        System.out.println("\n\n");
     }
 
 }
